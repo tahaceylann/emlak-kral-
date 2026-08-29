@@ -1,0 +1,11 @@
+{
+  "name": "Emlak Kralı",
+  "short_name": "Emlak Kralı",
+  "description": "Business Tour'dan ilham alan, stilize 3D web tabanlı zar/tahta oyunu",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0d1b2a",
+  "theme_color": "#0d1b2a",
+  "orientation": "portrait",
+  "icons": []
+}
