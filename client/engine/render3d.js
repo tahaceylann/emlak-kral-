@@ -15,6 +15,22 @@ const RenderModule = (() => {
   const pawns = {}; // playerId -> THREE.Group
   const tileMeshes = [];
   let running = false;
+  let toonGradient = null;
+  let activeRing = null;
+
+  /** 4 basamaklı toon-shading gradyanı — "stilize/toy" bir görünüm verir. */
+  function makeToonGradient() {
+    const canvas = document.createElement("canvas");
+    canvas.width = 4; canvas.height = 1;
+    const ctx = canvas.getContext("2d");
+    const shades = ["#4a4a55", "#8d8d9c", "#c9c9d6", "#ffffff"];
+    shades.forEach((c, i) => { ctx.fillStyle = c; ctx.fillRect(i, 0, 1, 1); });
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.minFilter = THREE.NearestFilter;
+    tex.magFilter = THREE.NearestFilter;
+    tex.generateMipmaps = false;
+    return tex;
+  }
 
   function makeLabelSprite(text, sub) {
     const canvas = document.createElement("canvas");
@@ -86,6 +102,7 @@ const RenderModule = (() => {
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0d1b2a);
     scene.fog = new THREE.Fog(0x0d1b2a, 30, 55);
+    toonGradient = makeToonGradient();
 
     // Ortografik (izometrik) kamera: mesafe değişse de tahtanın tamamı her
     // zaman kadraja sığar — mobil dar/uzun ekranlarda perspektif FOV
@@ -107,12 +124,20 @@ const RenderModule = (() => {
     scene.add(dir);
 
     const groundGeo = new THREE.CircleGeometry(13, 48);
-    const groundMat = new THREE.MeshStandardMaterial({ color: 0x0f2438, roughness: 0.95 });
+    const groundMat = new THREE.MeshToonMaterial({ color: 0x0f2438, gradientMap: toonGradient });
     const ground = new THREE.Mesh(groundGeo, groundMat);
     ground.rotation.x = -Math.PI / 2;
     ground.position.y = -0.06;
     ground.receiveShadow = true;
     scene.add(ground);
+
+    // Aktif oyuncunun piyonunun altında parıldayan, yavaşça dönen bir halka.
+    const ringGeo = new THREE.RingGeometry(0.55, 0.7, 32);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0xffd54f, transparent: true, opacity: 0.85, side: THREE.DoubleSide });
+    activeRing = new THREE.Mesh(ringGeo, ringMat);
+    activeRing.rotation.x = -Math.PI / 2;
+    activeRing.visible = false;
+    scene.add(activeRing);
 
     wireDragRotate(canvas);
     handleResize();
@@ -129,7 +154,7 @@ const RenderModule = (() => {
       const size = corner ? 2 : 1.9;
       const height = 0.28;
       const geo = new THREE.BoxGeometry(size, height, size);
-      const mat = new THREE.MeshStandardMaterial({ color: tileColor(tile), roughness: 0.55, metalness: 0.05 });
+      const mat = new THREE.MeshToonMaterial({ color: tileColor(tile), gradientMap: toonGradient });
       const mesh = new THREE.Mesh(geo, mat);
       const pos = Board.tilePosition(tile.index);
       mesh.position.set(pos.x, height / 2, pos.z);
@@ -157,13 +182,78 @@ const RenderModule = (() => {
   function createPawns(players) {
     Object.values(pawns).forEach((p) => scene.remove(p));
     players.forEach((player) => {
-      const mesh = Pieces.buildPawnMesh(THREE, player.color);
+      const mesh = Pieces.buildPawnMesh(THREE, player.color, player.shape, toonGradient);
       const pos = Board.tilePosition(player.position);
       const off = pawnOffset(player.id);
       mesh.position.set(pos.x + off[0], 0.28, pos.z + off[1]);
       scene.add(mesh);
       pawns[player.id] = mesh;
     });
+  }
+
+  /** Aktif oyuncunun piyonunun altındaki halkayı o piyona taşır/gösterir. */
+  function updateActiveRing(playerId) {
+    if (!activeRing) return;
+    const mesh = pawns[playerId];
+    if (!mesh) { activeRing.visible = false; return; }
+    activeRing.position.set(mesh.position.x, 0.03, mesh.position.z);
+    activeRing.visible = true;
+  }
+
+  /**
+   * Kısa ömürlü bir renkli parçacık patlaması (satın alma/kira/maaş gibi
+   * ekonomi olaylarını "hissettirmek" için). tileIndex verilmezse origin
+   * kullanılır.
+   */
+  function spawnBurstAtTile(tileIndex, color) {
+    const pos = Board.tilePosition(tileIndex);
+    const origin = new THREE.Vector3(pos.x, 0.5, pos.z);
+    const count = 12;
+    const positions = new Float32Array(count * 3);
+    const velocities = [];
+    for (let i = 0; i < count; i++) {
+      positions[i * 3] = origin.x; positions[i * 3 + 1] = origin.y; positions[i * 3 + 2] = origin.z;
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 0.9 + Math.random() * 1.3;
+      velocities.push({ x: Math.cos(angle) * speed, y: 2.0 + Math.random() * 1.4, z: Math.sin(angle) * speed });
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    const mat = new THREE.PointsMaterial({ color, size: 0.22, transparent: true, opacity: 1, depthWrite: false });
+    const points = new THREE.Points(geo, mat);
+    scene.add(points);
+    const start = performance.now();
+    const duration = 650;
+    function animate(now) {
+      const t = (now - start) / duration;
+      if (t >= 1) { scene.remove(points); geo.dispose(); mat.dispose(); return; }
+      const arr = geo.attributes.position.array;
+      for (let i = 0; i < count; i++) {
+        arr[i * 3] = origin.x + velocities[i].x * t;
+        arr[i * 3 + 1] = origin.y + velocities[i].y * t - 4 * t * t;
+        arr[i * 3 + 2] = origin.z + velocities[i].z * t;
+      }
+      geo.attributes.position.needsUpdate = true;
+      mat.opacity = 1 - t;
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+  }
+
+  /** Piyon bir kareye vardığında hafif bir "sekme" (squash & stretch) yapar. */
+  function bouncePawn(playerId) {
+    const mesh = pawns[playerId];
+    if (!mesh) return;
+    const start = performance.now();
+    const duration = 260;
+    function animate(now) {
+      const t = Math.min(1, (now - start) / duration);
+      const squash = Math.sin(t * Math.PI);
+      mesh.scale.set(1 + squash * 0.18, 1 - squash * 0.22, 1 + squash * 0.18);
+      if (t < 1) requestAnimationFrame(animate);
+      else mesh.scale.set(1, 1, 1);
+    }
+    requestAnimationFrame(animate);
   }
 
   /** Piyonu, tahta üzerinde kare kare zıplayarak from→to yoluna taşır. */
@@ -175,7 +265,7 @@ const RenderModule = (() => {
     const hopDuration = 220;
 
     function doHop() {
-      if (hop >= path.length - 1) { if (onComplete) onComplete(); return; }
+      if (hop >= path.length - 1) { bouncePawn(playerId); if (onComplete) onComplete(); return; }
       const fromPos = Board.tilePosition(path[hop]);
       const toPos = Board.tilePosition(path[hop + 1]);
       const start = performance.now();
@@ -275,7 +365,7 @@ const RenderModule = (() => {
 
   return {
     init, buildBoardTiles, createPawns, movePawnAlongPath,
-    startLoop, stopLoop, handleResize,
+    startLoop, stopLoop, handleResize, spawnBurstAtTile, updateActiveRing,
   };
 })();
 window.RenderModule = RenderModule;

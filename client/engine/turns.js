@@ -14,9 +14,11 @@ const Dice = typeof require !== "undefined" ? require("./dice.js") : window.Dice
 
 const BOARD_SIZE = 28;
 
-function createGame(numPlayers) {
+function createGame(numPlayers, humanShape) {
   const players = [];
-  for (let i = 0; i < numPlayers; i++) players.push(Economy.createPlayer(i, i === 0));
+  for (let i = 0; i < numPlayers; i++) {
+    players.push(Economy.createPlayer(i, i === 0, i === 0 ? humanShape : undefined));
+  }
   return {
     board: Board.buildBoard(),
     players,

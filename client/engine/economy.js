@@ -6,13 +6,15 @@ const SALARY = 200;
 
 const PLAYER_COLORS = [0xe53935, 0x1e88e5, 0x43a047, 0xfdd835];
 const PLAYER_LABELS = ["Sen", "Bot 1", "Bot 2", "Bot 3"];
+const DEFAULT_SHAPES = ["pawn", "cube", "gem"];
 
-function createPlayer(id, isHuman) {
+function createPlayer(id, isHuman, shape) {
   return {
     id,
     name: PLAYER_LABELS[id] || `Oyuncu ${id + 1}`,
     isHuman: !!isHuman,
     color: PLAYER_COLORS[id % PLAYER_COLORS.length],
+    shape: shape || DEFAULT_SHAPES[id % DEFAULT_SHAPES.length],
     cash: STARTING_CASH,
     position: 0,
     properties: [],

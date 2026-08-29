@@ -13,13 +13,23 @@
   <div id="app">
     <header id="topbar">
       <h1>🏙️ Emlak Kralı</h1>
-      <div id="turnInfo">Tur <span id="turnNumber">1</span></div>
+      <div id="topbarRight">
+        <button id="customizeBtn" title="Piyonunu ve zarını özelleştir">🎨</button>
+        <div id="turnInfo">Tur <span id="turnNumber">1</span></div>
+      </div>
     </header>
 
     <main id="boardWrap">
       <canvas id="boardCanvas"></canvas>
       <div id="diceDisplay" class="hidden">
         <span id="diceA">⚀</span><span id="diceB">⚀</span>
+      </div>
+      <div id="chanceToast" class="hidden">
+        <span id="chanceIcon">🎴</span>
+        <div>
+          <div id="chanceText"></div>
+          <div id="chanceAmount"></div>
+        </div>
       </div>
     </main>
 
@@ -48,6 +58,19 @@
       <p id="winSubtitle"></p>
       <div class="modal-actions">
         <button id="winRestartBtn" class="primary">Yeniden Oyna</button>
+      </div>
+    </div>
+
+    <div id="customizeModal" class="modal hidden">
+      <h2>Özelleştir</h2>
+      <p>Piyonunu ve zar temanı rengi seç. Değişiklik bir sonraki "Yeniden Başlat"ta uygulanır.</p>
+      <div class="picker-label">Piyon</div>
+      <div id="shapePicker" class="picker-grid"></div>
+      <div class="picker-label">Zar teması</div>
+      <div id="dicePicker" class="picker-grid"></div>
+      <div class="modal-actions">
+        <button id="customizeApplyBtn" class="primary">Uygula ve Yeniden Başlat</button>
+        <button id="customizeCloseBtn">Kapat</button>
       </div>
     </div>
   </div>
