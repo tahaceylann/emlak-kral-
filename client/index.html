@@ -14,6 +14,7 @@
     <header id="topbar">
       <h1>🏙️ Emlak Kralı</h1>
       <div id="topbarRight">
+        <button id="networkBtn" title="Çevrimiçi oda kur/katıl">🌐</button>
         <button id="customizeBtn" title="Piyonunu ve zarını özelleştir">🎨</button>
         <div id="turnInfo">Tur <span id="turnNumber">1</span></div>
       </div>
@@ -73,6 +74,36 @@
         <button id="customizeCloseBtn">Kapat</button>
       </div>
     </div>
+
+    <div id="networkModal" class="modal hidden">
+      <div id="netSetupView">
+        <h2>Çevrimiçi Oda</h2>
+        <p>Arkadaşlarınla gerçek zamanlı oyna. Sunucu adresini ve adını gir.</p>
+        <input id="netServerUrl" type="text" placeholder="ws://localhost:8081" />
+        <input id="netName" type="text" placeholder="Adın" maxlength="20" style="margin-top:8px" />
+        <div id="netError" class="net-error hidden"></div>
+        <div class="modal-actions" style="margin-top:14px">
+          <button id="netCreateBtn" class="primary">Oda Kur</button>
+        </div>
+        <div class="picker-label">veya kodla katıl</div>
+        <div style="display:flex; gap:8px">
+          <input id="netJoinCode" type="text" placeholder="ODA KODU" maxlength="5" style="flex:1; text-transform:uppercase" />
+          <button id="netJoinBtn">Katıl</button>
+        </div>
+        <div class="modal-actions" style="margin-top:14px">
+          <button id="netSetupCloseBtn">Kapat</button>
+        </div>
+      </div>
+      <div id="netLobbyView" class="hidden">
+        <h2>Oda: <span id="netRoomCode"></span></h2>
+        <p id="netLobbyHint">Diğer oyuncuların katılmasını bekliyor...</p>
+        <div id="netPlayerList" class="picker-grid" style="grid-template-columns:1fr"></div>
+        <div class="modal-actions" style="margin-top:14px">
+          <button id="netStartBtn" class="primary hidden">Oyunu Başlat</button>
+          <button id="netLeaveBtn">Odadan Ayrıl</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="vendor/three.min.js"></script>
@@ -83,6 +114,7 @@
   <script src="engine/turns.js"></script>
   <script src="engine/pieces.js"></script>
   <script src="engine/render3d.js"></script>
+  <script src="net/client.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

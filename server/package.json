@@ -1,0 +1,13 @@
+{
+  "name": "emlak-krali-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Emlak Kralı — gerçek zamanlı çok oyunculu WebSocket sunucusu (yetkili tur/ekonomi mantığı client/engine/*.js'i doğrudan paylaşır).",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

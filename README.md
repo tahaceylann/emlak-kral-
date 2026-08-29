@@ -5,12 +5,13 @@ bir zar/tahta (Monopoly tarzı) oyunu. Kendi orijinal teması ve tahta
 düzeniyle — jenerik "zar at, tahtada ilerle, mülk al/kirala" mekaniğini
 kullanır.
 
-Şu an **M3 aşamasında**: 4 oyunculu (1 insan + 3 bot), tek cihazda/yerel
-tarayıcıda oynanan, toon-shading'li ve piyon/zar özelleştirmeli çalışan bir
-prototip. Build aracı, framework veya harici bağımlılık yok — vanilla
-HTML/CSS/JS + Three.js.
+Şu an **M4 aşamasında**: toon-shading'li, piyon/zar özelleştirmeli, hem
+tek cihazda bot'lara karşı hem de **gerçek zamanlı çok oyunculu** (kod ile
+oda kur/katıl) oynanabilen bir prototip. İstemci build aracı/framework
+gerektirmeyen vanilla HTML/CSS/JS + Three.js; çok oyunculu için hafif bir
+Node.js WebSocket sunucusu var.
 
-## Nasıl oynanır (yerelde)
+## Nasıl oynanır — tek cihaz (bot'lara karşı)
 
 ```bash
 cd client
@@ -30,6 +31,29 @@ python3 -m http.server 8080
   Kule / Elmas) ve zar teması rengini seçebilirsin; seçim `localStorage`'a
   kaydedilir ve bir sonraki oyunda uygulanır.
 
+## Çevrimiçi oynamak (gerçek zamanlı çok oyunculu)
+
+```bash
+# 1. terminal — sunucu
+cd server && npm install && node server.js
+
+# 2. terminal — istemci
+cd client && python3 -m http.server 8080
+```
+
+Tarayıcıda `http://localhost:8080` aç, üst çubuktaki 🌐'ye bas:
+
+- **Oda Kur**: sunucu adresi (yerelde `ws://localhost:8081`) ve adını gir,
+  5 haneli bir oda kodu üretilir — arkadaşına bu kodu gönder.
+- **Kod ile Katıl**: aldığın kodu gir, aynı sunucuya bağlanırsın.
+- Ev sahibi hazır olduğunda **Oyunu Başlat**'a basar; dolmayan slotlar bot
+  olarak oynar. Sıra sana geldiğinde 🎲 **Zar At** aktif olur.
+- Hesaplama tamamen sunucuda yapılır (hile önlemek için) — istemci sadece
+  gelen state'i render eder. Bir oyuncunun bağlantısı koparsa sırası
+  geldiğinde bot gibi oynamaya devam eder, oyun donmaz.
+- Sunucuyu gerçek internete açmak (Railway/Render/Fly.io vb.) kendi
+  hesabınla yapman gereken ayrı bir adım — bkz. `server/README.md`.
+
 ## Dosya yapısı
 
 ```
@@ -45,9 +69,13 @@ client/
     render3d.js      Three.js sahnesi: izometrik ortografik kamera, toon-shading,
                      tahta/piyon render'ı, hareket animasyonu, sürükle-döndür,
                      parçacık efektleri (satın alma/kira/maaş), aktif tur halkası
-  net/, editor/     Henüz boş — M4 (çok oyunculu) ve M5 (harita editörü) için
+  net/client.js     WebSocket istemcisi (oda kur/katıl, sunucu olaylarını app.js'e iletir)
+  editor/           Henüz boş — M5 (harita editörü) için
   vendor/three.min.js
-server/, shared/     Henüz boş — M4'te dolacak (bkz. server/README.md)
+server/
+  server.js, rooms.js, package.json   Yetkili çok oyunculu sunucu (bkz. server/README.md)
+shared/              Boş — engine/*.js zaten hem tarayıcıda hem Node'da çalışıyor,
+                     ayrı bir kopyaya gerek kalmadı (bkz. shared/README.md)
 test/engine.test.js  DOM'suz, saf mantık testleri (`node test/engine.test.js`)
 ```
 
@@ -57,8 +85,10 @@ test/engine.test.js  DOM'suz, saf mantık testleri (`node test/engine.test.js`)
 2. ✅ **M1** — Tek oyunculu çekirdek mekanik
 3. ✅ **M2** — Görsel cila: toon-shading, satın alma/kira/maaş parçacık
    efektleri, piyon iniş sekmesi, aktif oyuncu halkası, şans kartı toast'ı
-4. ✅ **M3** — Karakter & zar özelleştirme (bu sürüm)
-5. ⬜ **M4** — Gerçek zamanlı çok oyunculu (Node WebSocket sunucusu)
+4. ✅ **M3** — Karakter & zar özelleştirme
+5. ✅ **M4** — Gerçek zamanlı çok oyunculu: Node WebSocket sunucusu, oda
+   kur/katıl, sunucu-yetkili tur/ekonomi mantığı, bağlantı kopunca bot
+   devralması (bu sürüm)
 6. ⬜ **M5** — Harita editörü
 7. ⬜ **M6** — Cila & dağıtım (GitHub Pages / hosting)
 

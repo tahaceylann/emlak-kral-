@@ -1,4 +1,9 @@
-# Çok oyunculu istemci (M4 — henüz yok)
+# Çok oyunculu istemci (M4 — tamamlandı)
 
-WebSocket istemci mantığı (oda kur/katıl, sunucu state'ini al, kendi
-sıranda input gönder) buraya gelecek.
+`client.js`: WebSocket bağlantısı, oda kur/katıl/başlat, sunucudan gelen
+olayları (`move`, `landing`, `state`, `buy_offer`, `room`, ...) `app.js`'e
+`on(type, fn)` ile ulaştırır. Oyun mantığının hiçbiri burada yok —
+sunucu (`/server`) yetkilidir, bu dosya sadece mesaj taşıyıcısı.
+
+Kullanım detayları için kök `README.md`'deki "Çevrimiçi oynamak" bölümüne
+ve `/server/README.md`'ye bakın.
