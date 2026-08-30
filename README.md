@@ -41,7 +41,10 @@ python3 -m http.server 8080
 # tarayıcıda http://localhost:8080 aç
 ```
 
-- 🎲 **Zar At**'a bas, piyonun tahtada 3D olarak ilerlediğini izle.
+- 🎲 Tahtanın ortasındaki **Zar At** butonuna bas, piyonun 3D olarak
+  ilerlediğini izle. Oyuncular (isim/nakit/mülk sayısı) ekranın dört
+  köşesinde birer kutucukta gösterilir; sırası gelenin kutusu altın
+  renkte parlar.
 - Sahipsiz bir mülke gelince **Satın Al / Geç** seç.
 - Bir bölgenin (renk grubunun) tamamı elindeyse o bölgedeki kiralar 2 katına
   çıkar.

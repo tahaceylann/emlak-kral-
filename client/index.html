@@ -17,12 +17,20 @@
         <button id="networkBtn" title="Çevrimiçi oda kur/katıl">🌐</button>
         <button id="editorBtn" title="Harita editörü">📝</button>
         <button id="customizeBtn" title="Piyonunu ve zarını özelleştir">🎨</button>
+        <button id="restartBtn" title="Oyunu yeniden başlat">↺</button>
         <div id="turnInfo">Tur <span id="turnNumber">1</span></div>
       </div>
     </header>
 
     <main id="boardWrap">
       <canvas id="boardCanvas"></canvas>
+
+      <div id="playerCorners"></div>
+
+      <div id="centerControls">
+        <button id="rollBtn">🎲<span>Zar At</span></button>
+      </div>
+
       <div id="diceDisplay" class="hidden">
         <span id="diceA">⚀</span><span id="diceB">⚀</span>
       </div>
@@ -35,14 +43,7 @@
       </div>
     </main>
 
-    <aside id="playerPanel"></aside>
-
     <div id="logPanel"></div>
-
-    <footer id="controls">
-      <button id="rollBtn">🎲 Zar At</button>
-      <button id="restartBtn" title="Oyunu yeniden başlat">↺ Yeniden Başlat</button>
-    </footer>
   </div>
 
   <div id="modalOverlay" class="hidden">

@@ -80,19 +80,24 @@
     renderLog();
   }
 
+  // Ekranın dört köşesine sabit kutucuklar — oyuncu sırasına göre bl→tl→tr→br.
+  const PLAYER_CORNER_CLASSES = ["corner-bl", "corner-tl", "corner-tr", "corner-br"];
+
   function renderPlayerPanel() {
-    const panel = el("playerPanel");
-    panel.innerHTML = "";
+    const container = el("playerCorners");
+    container.innerHTML = "";
     game.players.forEach((p) => {
-      const row = document.createElement("div");
-      row.className = "player-row" +
+      const box = document.createElement("div");
+      box.className = "player-box " + (PLAYER_CORNER_CLASSES[p.id] || "corner-bl") +
         (p.id === game.currentIndex ? " active" : "") +
         (p.bankrupt ? " bankrupt" : "");
       const swatch = `<span class="swatch" style="background:#${p.color.toString(16).padStart(6, "0")}"></span>`;
       const youTag = mode === "online" && p.id === mySlot ? " (sen)" : "";
-      row.innerHTML = `${swatch}<span class="pname">${p.name}${youTag}${p.bankrupt ? " (iflas)" : ""}</span>` +
-        `<span class="pcash">${p.cash}₺</span><span class="pprops">${p.properties.length} mülk</span>`;
-      panel.appendChild(row);
+      box.innerHTML =
+        `<div class="pname">${swatch}${p.name}${youTag}${p.bankrupt ? " (iflas)" : ""}</div>` +
+        `<div class="pcash">${p.cash}₺</div>` +
+        `<div class="pprops">${p.properties.length} mülk</div>`;
+      container.appendChild(box);
     });
   }
 

@@ -95,30 +95,58 @@ html, body {
   display: inline-block; width: 22px; height: 22px; border-radius: 50%; margin-bottom: 4px;
 }
 
-#playerPanel {
-  display: flex; flex-direction: column; gap: 4px;
-  padding: 8px 10px;
-  background: #0f2237;
-  border-top: 1px solid rgba(255,255,255,0.06);
+/* Oyuncular: tahtanın üstünde, ekranın dört köşesinde yüzen kutucuklar. */
+#playerCorners {
+  position: absolute; inset: 0;
+  pointer-events: none; /* altındaki tahtayı/sürüklemeyi engellemesin */
+  z-index: 5;
 }
-.player-row {
-  display: grid;
-  grid-template-columns: 14px 1fr auto auto;
-  align-items: center; gap: 8px;
-  font-size: 13px;
-  padding: 6px 8px;
-  border-radius: 8px;
-  background: rgba(255,255,255,0.03);
+.player-box {
+  position: absolute;
+  pointer-events: auto;
+  min-width: 96px;
+  max-width: 34vw;
+  background: rgba(10,16,24,0.82);
+  border: 2px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 7px 10px;
+  font-size: 11.5px;
+  line-height: 1.4;
+  backdrop-filter: blur(2px);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-.player-row.active {
-  background: rgba(255, 213, 79, 0.14);
-  box-shadow: inset 0 0 0 1px rgba(255,213,79,0.5);
+.player-box.corner-tl { top: 10px; left: 10px; }
+.player-box.corner-tr { top: 10px; right: 10px; text-align: right; }
+.player-box.corner-bl { bottom: 10px; left: 10px; }
+.player-box.corner-br { bottom: 10px; right: 10px; text-align: right; }
+.player-box.active {
+  border-color: #ffd54f;
+  box-shadow: 0 0 18px rgba(255,213,79,0.35);
 }
-.player-row.bankrupt { opacity: 0.45; text-decoration: line-through; }
-.swatch { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
-.pname { font-weight: 600; }
-.pcash { color: #7ee787; font-variant-numeric: tabular-nums; }
-.pprops { opacity: 0.65; font-size: 11px; }
+.player-box.bankrupt { opacity: 0.4; }
+.player-box .pname {
+  display: flex; align-items: center; gap: 6px;
+  font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.player-box.corner-tr .pname, .player-box.corner-br .pname { flex-direction: row-reverse; }
+.player-box .pcash { color: #7ee787; font-variant-numeric: tabular-nums; font-weight: 600; }
+.player-box .pprops { opacity: 0.65; font-size: 10px; }
+.swatch { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+
+/* Zar At: tahtanın ortasındaki boş alanda yüzen bir buton. */
+#centerControls {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  z-index: 6;
+}
+#rollBtn {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  border-radius: 999px;
+  width: 96px; height: 96px;
+  padding: 0;
+  font-size: 26px;
+  box-shadow: 0 10px 34px rgba(0,0,0,0.55);
+}
+#rollBtn span { font-size: 12px; font-weight: 700; }
 
 #logPanel {
   max-height: 90px;
@@ -131,12 +159,6 @@ html, body {
   border-top: 1px solid rgba(255,255,255,0.05);
 }
 
-#controls {
-  display: flex; gap: 10px;
-  padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
-  background: #0d1b2a;
-  border-top: 1px solid rgba(255,255,255,0.08);
-}
 button {
   font: inherit;
   border: none;
@@ -148,8 +170,7 @@ button {
 }
 button:active { transform: scale(0.96); }
 button:disabled { opacity: 0.4; cursor: default; }
-#rollBtn { flex: 1; background: linear-gradient(135deg, #ffd54f, #ffb300); color: #2b1c00; font-size: 16px; }
-#restartBtn { background: rgba(255,255,255,0.08); color: #f2f4f8; }
+#rollBtn { background: linear-gradient(135deg, #ffd54f, #ffb300); color: #2b1c00; }
 
 #modalOverlay {
   position: fixed; inset: 0;
@@ -253,48 +274,25 @@ input[type="text"]::placeholder { color: rgba(242,244,248,0.4); }
   #app { max-width: 480px; margin: 0 auto; box-shadow: 0 0 40px rgba(0,0,0,0.4); }
 }
 
-/* PC / geniş ekran: tahta solda büyük, kontroller sağda sabit bir panelde —
-   dikey mobil şeridi telefon genişliğine sıkıştırmak yerine ekranı kullan. */
+/* PC / geniş ekran: tahta tüm alanı kaplar, oyuncu kutucukları ve zar
+   butonu tahtanın üstünde büyür — artık ayrı bir yan panele gerek yok,
+   oyuncu/kontrol bilgisi zaten tahtanın üstünde köşelerde/ortada duruyor. */
 @media (min-width: 900px) {
   html, body { overflow: hidden; }
   #app {
-    display: grid;
-    grid-template-columns: 1fr 380px;
-    grid-template-rows: auto 1fr auto auto;
-    grid-template-areas:
-      "topbar topbar"
-      "board  panel"
-      "board  log"
-      "board  controls";
     height: 100vh;
-    max-width: 1440px;
+    max-width: 1600px;
     margin: 0 auto;
     box-shadow: 0 0 60px rgba(0,0,0,0.5);
   }
-  #topbar { grid-area: topbar; padding: 14px 20px; }
+  #topbar { padding: 14px 24px; }
   #topbar h1 { font-size: 21px; }
-  #boardWrap { grid-area: board; min-height: 0; min-width: 0; }
-  #playerPanel {
-    grid-area: panel;
-    border-top: none;
-    border-left: 1px solid rgba(255,255,255,0.06);
-    overflow-y: auto;
-    padding: 14px;
-    gap: 8px;
-  }
-  .player-row { font-size: 14px; padding: 10px 12px; }
-  #logPanel {
-    grid-area: log;
-    border-left: 1px solid rgba(255,255,255,0.05);
-    max-height: 220px;
-    padding: 10px 16px;
-  }
-  #controls {
-    grid-area: controls;
-    border-left: 1px solid rgba(255,255,255,0.08);
-    padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
-  }
-  #rollBtn { font-size: 18px; padding: 14px 18px; cursor: pointer; }
+  #logPanel { max-height: 120px; padding: 8px 24px; }
+  .player-box { font-size: 14px; padding: 10px 14px; min-width: 130px; max-width: 22vw; }
+  .player-box .pprops { font-size: 11px; }
+  .swatch { width: 12px; height: 12px; }
+  #rollBtn { width: 128px; height: 128px; font-size: 34px; }
+  #rollBtn span { font-size: 14px; }
   #rollBtn:not(:disabled):hover { filter: brightness(1.08); }
   button:not(:disabled) { cursor: pointer; }
   button:not(:disabled):hover { filter: brightness(1.1); }
