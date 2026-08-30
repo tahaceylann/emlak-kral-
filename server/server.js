@@ -12,6 +12,18 @@ const { WebSocketServer } = require("ws");
 const Rooms = require("./rooms.js");
 
 const Turns = require("../client/engine/turns.js");
+const Board = require("../client/engine/board.js");
+
+const KNOWN_TILE_TYPES = new Set(["start", "property", "chance", "tax", "rest"]);
+
+/** İstemciden gelen özel haritayı kabul etmeden önce hafif bir sağlık kontrolü. */
+function sanitizeBoardDef(def) {
+  if (!Array.isArray(def) || def.length !== Board.BOARD_DEF.length) return undefined;
+  if (!def[0] || def[0].type !== "start") return undefined;
+  const ok = def.every((t) => t && KNOWN_TILE_TYPES.has(t.type) && typeof t.name === "string" && t.name.trim() &&
+    (t.type !== "property" || (Number.isInteger(t.group) && t.group >= 0 && t.group < Board.PROPERTY_GROUPS.length)));
+  return ok ? def : undefined;
+}
 
 const PORT = process.env.PORT || 8081;
 const BOT_DELAY_MS = 900;
@@ -48,9 +60,9 @@ function slotIsPlayable(room, slot) {
   return !s || !!s.socket; // bot slotu (null) ya da bağlı insan
 }
 
-function startGame(room) {
+function startGame(room, boardDef) {
   room.started = true;
-  const game = Turns.createGame(Rooms.MAX_SLOTS);
+  const game = Turns.createGame(Rooms.MAX_SLOTS, undefined, boardDef);
   game.players.forEach((p, i) => {
     const s = room.slots[i];
     p.isHuman = !!s; // dolu slot = insan, boş slot = bot
@@ -153,7 +165,7 @@ wss.on("connection", (socket) => {
 
     if (msg.type === "start_game") {
       if (mySlot !== room.hostSlot || room.started) return;
-      startGame(room);
+      startGame(room, sanitizeBoardDef(msg.boardDef));
       return;
     }
 

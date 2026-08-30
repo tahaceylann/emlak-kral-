@@ -167,6 +167,41 @@ button:disabled { opacity: 0.4; cursor: default; }
   box-shadow: 0 20px 60px rgba(0,0,0,0.5);
 }
 .modal.hidden { display: none; }
+.modal.wide { max-width: 480px; max-height: 86vh; display: flex; flex-direction: column; }
+.modal.wide.hidden { display: none; }
+
+.editor-toggle {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; margin: 10px 0 4px;
+}
+.editor-toggle input { width: 16px; height: 16px; }
+
+.editor-rows {
+  overflow-y: auto;
+  flex: 1 1 auto;
+  display: flex; flex-direction: column; gap: 6px;
+  margin: 8px 0;
+  padding-right: 2px;
+}
+.editor-row {
+  display: grid;
+  grid-template-columns: 16px 62px minmax(0, 1fr) minmax(0, 84px);
+  gap: 6px;
+  align-items: center;
+  background: rgba(255,255,255,0.05);
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+.editor-row .idx { font-size: 10px; opacity: 0.55; text-align: center; }
+.editor-row select, .editor-row input[type="text"], .editor-row input[type="number"] {
+  width: 100%;
+  min-width: 0;
+  padding: 6px 4px;
+  font-size: 11px;
+  border-radius: 6px;
+  text-overflow: ellipsis;
+}
+.editor-row .extra-empty { font-size: 10px; opacity: 0.4; text-align: center; }
 .modal h2 { margin: 0 0 8px; font-size: 19px; }
 .modal p { margin: 0 0 18px; font-size: 14px; color: #c7d3de; line-height: 1.5; }
 .modal-actions { display: flex; gap: 10px; }

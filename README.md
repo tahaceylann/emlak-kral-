@@ -5,11 +5,12 @@ bir zar/tahta (Monopoly tarzı) oyunu. Kendi orijinal teması ve tahta
 düzeniyle — jenerik "zar at, tahtada ilerle, mülk al/kirala" mekaniğini
 kullanır.
 
-Şu an **M4 aşamasında**: toon-shading'li, piyon/zar özelleştirmeli, hem
+Şu an **M5 aşamasında**: toon-shading'li, piyon/zar özelleştirmeli, hem
 tek cihazda bot'lara karşı hem de **gerçek zamanlı çok oyunculu** (kod ile
-oda kur/katıl) oynanabilen bir prototip. İstemci build aracı/framework
-gerektirmeyen vanilla HTML/CSS/JS + Three.js; çok oyunculu için hafif bir
-Node.js WebSocket sunucusu var.
+oda kur/katıl) oynanabilen, kendi **harita editörünle** kendi tahtanı
+tasarlayabildiğin bir prototip. İstemci build aracı/framework gerektirmeyen
+vanilla HTML/CSS/JS + Three.js; çok oyunculu için hafif bir Node.js
+WebSocket sunucusu var.
 
 ## Nasıl oynanır — tek cihaz (bot'lara karşı)
 
@@ -53,6 +54,23 @@ Tarayıcıda `http://localhost:8080` aç, üst çubuktaki 🌐'ye bas:
   geldiğinde bot gibi oynamaya devam eder, oyun donmaz.
 - Sunucuyu gerçek internete açmak (Railway/Render/Fly.io vb.) kendi
   hesabınla yapman gereken ayrı bir adım — bkz. `server/README.md`.
+- Ev sahibi özel bir harita hazırlayıp aktif ettiyse (aşağıya bak), oda
+  başlatıldığında o harita otomatik olarak tüm oyunculara senkronize edilir.
+
+## Kendi haritanı tasarlamak (harita editörü)
+
+Üst çubuktaki 📝'ye bas:
+
+- 28 kare sabit; her karenin **tipini** (Mülk/Şans/Vergi/Dinlenme), **ismini**
+  ve tipe özgü değerlerini (mülk bölgesi, vergi miktarı, dinlenme bonusu)
+  değiştirebilirsin. İlk kare (Başlangıç) sabittir.
+- **"Bu haritayı yeni oyunlarda kullan"** kutusunu işaretleyip **Kaydet**'e
+  basınca, bir sonraki "Yeniden Başlat"ta (tek cihaz) ya da oda
+  başlatıldığında (çevrimiçi) bu harita kullanılır.
+- **Paylaşım kodu**: Kaydet'e bastığında kutuya bir kod dolar — kopyalayıp
+  arkadaşına gönder, o da kodu yapıştırıp **İçe Aktar**'a basarak aynı
+  haritayı kendi tarayıcısına yükleyebilir.
+- Harita `localStorage`'da saklanır; **Varsayılana Dön** ile sıfırlanabilir.
 
 ## Dosya yapısı
 
@@ -70,7 +88,8 @@ client/
                      tahta/piyon render'ı, hareket animasyonu, sürükle-döndür,
                      parçacık efektleri (satın alma/kira/maaş), aktif tur halkası
   net/client.js     WebSocket istemcisi (oda kur/katıl, sunucu olaylarını app.js'e iletir)
-  editor/           Henüz boş — M5 (harita editörü) için
+  editor/mapEditor.js   Harita editörü mantığı: doğrulama, localStorage,
+                        paylaşım kodu encode/decode (form/DOM app.js'te)
   vendor/three.min.js
 server/
   server.js, rooms.js, package.json   Yetkili çok oyunculu sunucu (bkz. server/README.md)
@@ -88,8 +107,11 @@ test/engine.test.js  DOM'suz, saf mantık testleri (`node test/engine.test.js`)
 4. ✅ **M3** — Karakter & zar özelleştirme
 5. ✅ **M4** — Gerçek zamanlı çok oyunculu: Node WebSocket sunucusu, oda
    kur/katıl, sunucu-yetkili tur/ekonomi mantığı, bağlantı kopunca bot
-   devralması (bu sürüm)
-6. ⬜ **M5** — Harita editörü
+   devralması
+6. ✅ **M5** — Harita editörü: 28 karenin tipi/ismi/değerleri düzenlenebilir,
+   `localStorage`'a kaydedilir, paylaşım koduyla arkadaşlara aktarılabilir,
+   hem tek cihazda hem çevrimiçi odada (sunucuya senkronize) kullanılır
+   (bu sürüm)
 7. ⬜ **M6** — Cila & dağıtım (GitHub Pages / hosting)
 
 ## Test

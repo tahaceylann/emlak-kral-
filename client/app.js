@@ -14,6 +14,7 @@
   const Render = window.RenderModule;
   const Pieces = window.PiecesModule;
   const Net = window.NetModule;
+  const Editor = window.EditorModule;
 
   const NUM_PLAYERS = 4;
   const BOT_MOVE_DELAY = 700;
@@ -32,6 +33,7 @@
   let mode = "local"; // "local" | "online"
   let mySlot = null;
   let isHost = false;
+  let editorDef = null; // harita editöründeki mevcut taslak
 
   const el = (id) => document.getElementById(id);
   const DICE_FACES = ["", "⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
@@ -39,9 +41,13 @@
   function loadCustom() {
     try {
       const raw = localStorage.getItem(CUSTOM_STORAGE_KEY);
-      if (raw) return Object.assign({ shape: "pawn", dice: "gold" }, JSON.parse(raw));
+      if (raw) return Object.assign({ shape: "pawn", dice: "gold", useCustomBoard: false }, JSON.parse(raw));
     } catch (e) { /* localStorage yoksa/bozuksa varsayılana düş */ }
-    return { shape: "pawn", dice: "gold" };
+    return { shape: "pawn", dice: "gold", useCustomBoard: false };
+  }
+  function getActiveBoardDef() {
+    if (!custom.useCustomBoard) return undefined;
+    return Editor.loadSavedDef() || undefined;
   }
   function saveCustom() {
     try { localStorage.setItem(CUSTOM_STORAGE_KEY, JSON.stringify(custom)); } catch (e) { /* yok say */ }
@@ -53,7 +59,7 @@
   }
 
   function newGame() {
-    game = Turns.createGame(NUM_PLAYERS, custom.shape);
+    game = Turns.createGame(NUM_PLAYERS, custom.shape, getActiveBoardDef());
     Render.buildBoardTiles(game.board);
     Render.createPawns(game.players);
     Render.updateActiveRing(game.currentIndex);
@@ -211,6 +217,117 @@
   function closeCustomizeModal() {
     el("modalOverlay").classList.add("hidden");
     el("customizeModal").classList.add("hidden");
+  }
+
+  // --- Harita editörü (M5) -------------------------------------------
+  function buildEditorRow(tile, index) {
+    const row = document.createElement("div");
+    row.className = "editor-row";
+
+    const idx = document.createElement("div");
+    idx.className = "idx";
+    idx.textContent = index;
+    row.appendChild(idx);
+
+    const typeSelect = document.createElement("select");
+    if (index === 0) {
+      typeSelect.disabled = true;
+      const opt = document.createElement("option");
+      opt.textContent = "Başlangıç"; opt.value = "start";
+      typeSelect.appendChild(opt);
+    } else {
+      Editor.TILE_TYPES.forEach((t) => {
+        const opt = document.createElement("option");
+        opt.value = t.id; opt.textContent = t.label;
+        if (tile.type === t.id) opt.selected = true;
+        typeSelect.appendChild(opt);
+      });
+    }
+    row.appendChild(typeSelect);
+
+    const nameInput = document.createElement("input");
+    nameInput.type = "text"; nameInput.value = tile.name; nameInput.maxLength = 24;
+    nameInput.addEventListener("input", () => { tile.name = nameInput.value; });
+    row.appendChild(nameInput);
+
+    const extraContainer = document.createElement("div");
+    row.appendChild(extraContainer);
+
+    function renderExtra() {
+      extraContainer.innerHTML = "";
+      if (tile.type === "property") {
+        const groupSelect = document.createElement("select");
+        window.BoardModule.PROPERTY_GROUPS.forEach((g) => {
+          const opt = document.createElement("option");
+          opt.value = g.id; opt.textContent = g.name;
+          if (tile.group === g.id) opt.selected = true;
+          groupSelect.appendChild(opt);
+        });
+        groupSelect.addEventListener("change", () => {
+          tile.group = Number(groupSelect.value);
+          delete tile.price; delete tile.rent; // grup değişince otomatik yeniden hesaplansın
+        });
+        extraContainer.appendChild(groupSelect);
+      } else if (tile.type === "tax") {
+        const num = document.createElement("input");
+        num.type = "number"; num.min = "0"; num.step = "10";
+        num.value = tile.amount != null ? tile.amount : 100;
+        num.addEventListener("input", () => { tile.amount = Number(num.value) || 0; });
+        extraContainer.appendChild(num);
+      } else if (tile.type === "rest") {
+        const num = document.createElement("input");
+        num.type = "number"; num.min = "0"; num.step = "10";
+        num.placeholder = "bonus";
+        num.value = tile.bonus || "";
+        num.addEventListener("input", () => {
+          const v = Number(num.value);
+          if (v > 0) tile.bonus = v; else delete tile.bonus;
+        });
+        extraContainer.appendChild(num);
+      } else {
+        const span = document.createElement("span");
+        span.className = "extra-empty"; span.textContent = "—";
+        extraContainer.appendChild(span);
+      }
+    }
+    renderExtra();
+
+    if (index !== 0) {
+      typeSelect.addEventListener("change", () => {
+        delete tile.group; delete tile.price; delete tile.rent; delete tile.amount; delete tile.bonus;
+        tile.type = typeSelect.value;
+        if (tile.type === "property") tile.group = 0;
+        if (tile.type === "tax") tile.amount = 100;
+        renderExtra();
+      });
+    }
+
+    return row;
+  }
+
+  function renderEditorRows(def) {
+    const container = el("editorRows");
+    container.innerHTML = "";
+    def.forEach((tile, i) => container.appendChild(buildEditorRow(tile, i)));
+  }
+
+  function openEditorModal() {
+    editorDef = Editor.loadSavedDef() || Editor.getDefaultDef();
+    el("editorUseToggle").checked = !!custom.useCustomBoard;
+    el("editorShareCode").value = "";
+    el("editorError").classList.add("hidden");
+    renderEditorRows(editorDef);
+    el("modalOverlay").classList.remove("hidden");
+    el("editorModal").classList.remove("hidden");
+  }
+  function closeEditorModal() {
+    el("modalOverlay").classList.add("hidden");
+    el("editorModal").classList.add("hidden");
+  }
+  function showEditorError(msg) {
+    const e = el("editorError");
+    e.textContent = msg;
+    e.classList.remove("hidden");
   }
 
   // --- Çevrimiçi oda (M4) ------------------------------------------------
@@ -463,8 +580,35 @@
         showNetError("Sunucuya bağlanılamadı: " + e.message);
       }
     });
-    el("netStartBtn").addEventListener("click", () => Net.startGame());
+    el("netStartBtn").addEventListener("click", () => Net.startGame(getActiveBoardDef()));
     el("netLeaveBtn").addEventListener("click", leaveOnlineRoom);
+
+    el("editorBtn").addEventListener("click", openEditorModal);
+    el("editorCloseBtn").addEventListener("click", closeEditorModal);
+    el("editorResetBtn").addEventListener("click", () => {
+      editorDef = Editor.getDefaultDef();
+      renderEditorRows(editorDef);
+    });
+    el("editorSaveBtn").addEventListener("click", () => {
+      if (!Editor.isValidDef(editorDef)) {
+        showEditorError("Harita geçersiz — her karenin bir ismi olmalı ve mülk karolarının bir bölgesi seçili olmalı.");
+        return;
+      }
+      Editor.saveDef(editorDef);
+      custom.useCustomBoard = el("editorUseToggle").checked;
+      saveCustom();
+      el("editorShareCode").value = Editor.encodeShareCode(editorDef);
+      el("editorError").classList.add("hidden");
+    });
+    el("editorImportBtn").addEventListener("click", () => {
+      try {
+        editorDef = Editor.decodeShareCode(el("editorShareCode").value);
+        renderEditorRows(editorDef);
+        el("editorError").classList.add("hidden");
+      } catch (e) {
+        showEditorError("Kod okunamadı: " + e.message);
+      }
+    });
 
     window.addEventListener("resize", Render.handleResize);
   }

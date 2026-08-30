@@ -1,4 +1,8 @@
-# Harita editörü (M5 — henüz yok)
+# Harita editörü (M5 — tamamlandı)
 
-Kare-kare tahta tasarım arayüzü ve JSON kaydet/yükle mantığı buraya
-gelecek.
+`mapEditor.js`: doğrulama (`isValidDef`), `localStorage` kaydet/yükle,
+paylaşım kodu encode/decode. Saf yardımcı fonksiyonlar — form/DOM inşası
+`app.js`'te (diğer modallarla aynı desende).
+
+Kullanım detayları için kök `README.md`'deki "Kendi haritanı tasarlamak"
+bölümüne bakın.

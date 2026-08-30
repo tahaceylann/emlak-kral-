@@ -35,7 +35,7 @@ const NetModule = (() => {
 
   function createRoom(name) { send({ type: "create_room", name }); }
   function joinRoom(code, name) { send({ type: "join_room", code, name }); }
-  function startGame() { send({ type: "start_game" }); }
+  function startGame(boardDef) { send({ type: "start_game", boardDef }); }
   function roll() { send({ type: "roll" }); }
   function buyDecision(buy) { send({ type: "buy_decision", buy }); }
   function disconnect() { if (ws) { ws.close(); ws = null; } }

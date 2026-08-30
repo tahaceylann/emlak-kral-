@@ -66,17 +66,29 @@ const BOARD_DEF = [
   { type: "tax", name: "Lüks Konut Vergisi", amount: 250 },
 ];
 
-/** Tahtayı, tur içindeki her ekonomik alanın fiyat/kira bilgisiyle üretir. */
-function buildBoard() {
-  return BOARD_DEF.map((def, index) => {
-    const tile = { index, ...def };
+/**
+ * Tahtayı, tur içindeki her ekonomik alanın fiyat/kira bilgisiyle üretir.
+ * `customDef` verilirse (harita editöründen, M5) o kullanılır — uzunluğu
+ * BOARD_DEF ile aynı değilse (bozuk/eski veri) sessizce varsayılana döner.
+ * Property karolarında `price`/`rent` editörden geldiyse aynen kullanılır,
+ * gelmediyse (veya 0/negatifse) gruba göre otomatik hesaplanır.
+ */
+function buildBoard(customDef) {
+  const def = Array.isArray(customDef) && customDef.length === BOARD_DEF.length ? customDef : BOARD_DEF;
+  return def.map((rawDef, index) => {
+    const tile = { index, ...rawDef };
     if (tile.type === "property") {
-      tile.price = priceForGroup(tile.group);
-      tile.rent = rentForGroup(tile.group);
+      tile.price = tile.price > 0 ? tile.price : priceForGroup(tile.group);
+      tile.rent = tile.rent > 0 ? tile.rent : rentForGroup(tile.group);
       tile.ownerId = null;
     }
     return tile;
   });
+}
+
+/** Editörün üzerine güvenle yazabileceği, BOARD_DEF'ten bağımsız derin bir kopya. */
+function cloneDefaultDef() {
+  return BOARD_DEF.map((t) => Object.assign({}, t));
 }
 
 /** 28 kareyi kare bir döngüde 3D koordinatlara yerleştirir (2 birim/kare). */
@@ -103,7 +115,7 @@ function isCorner(index) {
 
 // Node (test scripti) ve tarayıcı (plain <script>) ikisinde de çalışsın.
 const BoardModule = {
-  PROPERTY_GROUPS, BOARD_DEF, buildBoard, tilePosition, isCorner,
+  PROPERTY_GROUPS, BOARD_DEF, buildBoard, cloneDefaultDef, tilePosition, isCorner,
   priceForGroup, rentForGroup,
 };
 if (typeof module !== "undefined" && module.exports) module.exports = BoardModule;

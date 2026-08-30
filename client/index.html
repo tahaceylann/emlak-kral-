@@ -15,6 +15,7 @@
       <h1>🏙️ Emlak Kralı</h1>
       <div id="topbarRight">
         <button id="networkBtn" title="Çevrimiçi oda kur/katıl">🌐</button>
+        <button id="editorBtn" title="Harita editörü">📝</button>
         <button id="customizeBtn" title="Piyonunu ve zarını özelleştir">🎨</button>
         <div id="turnInfo">Tur <span id="turnNumber">1</span></div>
       </div>
@@ -104,6 +105,27 @@
         </div>
       </div>
     </div>
+
+    <div id="editorModal" class="modal wide hidden">
+      <h2>Harita Editörü</h2>
+      <p>28 kare sabit; her karenin tipini, ismini ve değerlerini değiştirerek
+        kendi haritanı tasarla.</p>
+      <label class="editor-toggle">
+        <input type="checkbox" id="editorUseToggle" /> Bu haritayı yeni oyunlarda kullan
+      </label>
+      <div id="editorRows" class="editor-rows"></div>
+      <div class="picker-label">Paylaşım kodu (kopyala / yapıştır)</div>
+      <div style="display:flex; gap:8px">
+        <input id="editorShareCode" type="text" placeholder="Kod burada görünür / buraya yapıştır" />
+        <button id="editorImportBtn">İçe Aktar</button>
+      </div>
+      <div id="editorError" class="net-error hidden"></div>
+      <div class="modal-actions" style="margin-top:14px">
+        <button id="editorResetBtn">Varsayılana Dön</button>
+        <button id="editorSaveBtn" class="primary">Kaydet</button>
+        <button id="editorCloseBtn">Kapat</button>
+      </div>
+    </div>
   </div>
 
   <script src="vendor/three.min.js"></script>
@@ -114,6 +136,7 @@
   <script src="engine/turns.js"></script>
   <script src="engine/pieces.js"></script>
   <script src="engine/render3d.js"></script>
+  <script src="editor/mapEditor.js"></script>
   <script src="net/client.js"></script>
   <script src="app.js"></script>
 </body>

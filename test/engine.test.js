@@ -9,6 +9,7 @@ const path = require("path");
 const Board = require(path.join(__dirname, "../client/engine/board.js"));
 const Economy = require(path.join(__dirname, "../client/engine/economy.js"));
 const Turns = require(path.join(__dirname, "../client/engine/turns.js"));
+const Editor = require(path.join(__dirname, "../client/editor/mapEditor.js"));
 
 let passed = 0;
 function test(name, fn) {
@@ -131,6 +132,51 @@ test("checkGameOver tek oyuncu kalınca biter", () => {
   const over = Turns.checkGameOver(game);
   assert.strictEqual(over, true);
   assert.strictEqual(game.winner.id, 0);
+});
+
+console.log("board.js — özel harita (M5)");
+test("buildBoard özel tanımı kabul eder", () => {
+  const custom = Board.cloneDefaultDef();
+  custom[1].name = "Test Sokağı";
+  const board = Board.buildBoard(custom);
+  assert.strictEqual(board[1].name, "Test Sokağı");
+});
+test("uzunluğu yanlış özel tanım sessizce varsayılana döner", () => {
+  const board = Board.buildBoard([{ type: "start", name: "x" }]); // 28 değil
+  assert.strictEqual(board.length, 28);
+  assert.strictEqual(board[0].name, "Başlangıç");
+});
+test("özel tanımda price/rent verilmezse gruba göre hesaplanır", () => {
+  const custom = Board.cloneDefaultDef();
+  delete custom[1].price; delete custom[1].rent;
+  const board = Board.buildBoard(custom);
+  assert.strictEqual(board[1].price, Board.priceForGroup(board[1].group));
+});
+
+console.log("editor/mapEditor.js");
+test("varsayılan tanım geçerlidir", () => {
+  assert.strictEqual(Editor.isValidDef(Editor.getDefaultDef()), true);
+});
+test("index 0 'start' olmayan tanım geçersizdir", () => {
+  const bad = Editor.getDefaultDef();
+  bad[0].type = "property"; bad[0].group = 0;
+  assert.strictEqual(Editor.isValidDef(bad), false);
+});
+test("ismi boş kare geçersizdir", () => {
+  const bad = Editor.getDefaultDef();
+  bad[3].name = "  ";
+  assert.strictEqual(Editor.isValidDef(bad), false);
+});
+test("paylaşım kodu encode/decode round-trip", () => {
+  const def = Editor.getDefaultDef();
+  def[2].name = "Değişti";
+  const code = Editor.encodeShareCode(def);
+  const decoded = Editor.decodeShareCode(code);
+  assert.strictEqual(decoded[2].name, "Değişti");
+  assert.strictEqual(decoded.length, 28);
+});
+test("bozuk paylaşım kodu hata fırlatır", () => {
+  assert.throws(() => Editor.decodeShareCode("bu-gecerli-bir-kod-degil!!"));
 });
 
 console.log(`\n${passed} test geçti.`);
