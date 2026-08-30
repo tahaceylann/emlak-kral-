@@ -33,28 +33,49 @@ const RenderModule = (() => {
     return tex;
   }
 
-  function makeLabelSprite(text, sub) {
+  /**
+   * Kare ismini/değerini, gerçek bir tahta oyunundaki gibi karonun
+   * YÜZEYİNE düz basılı bir etiket olarak üretir (tahtanın üstünde uçuşan
+   * bir kart yerine) — Business Tour'daki gibi. Sprite değil düz bir
+   * THREE.Mesh (PlaneGeometry): kameraya dönmez, tahtayla birlikte durur.
+   */
+  function makeTileLabelMesh(text, sub, planeSize) {
     const canvas = document.createElement("canvas");
-    canvas.width = 256; canvas.height = 128;
+    canvas.width = 220; canvas.height = 220;
     const ctx = canvas.getContext("2d");
-    ctx.fillStyle = "rgba(20,20,28,0.82)";
-    roundRect(ctx, 4, 4, 248, 120, 16);
+    ctx.fillStyle = "rgba(12,12,18,0.6)";
+    roundRect(ctx, 8, 8, 204, 204, 20);
     ctx.fill();
     ctx.fillStyle = "#fff";
-    ctx.font = "bold 26px system-ui, sans-serif";
+    ctx.font = "bold 24px system-ui, sans-serif";
     ctx.textAlign = "center";
-    wrapText(ctx, text, 128, 46, 232, 28);
+    wrapText(ctx, text, 110, 92, 180, 27);
     if (sub) {
-      ctx.font = "22px system-ui, sans-serif";
+      ctx.font = "bold 22px system-ui, sans-serif";
       ctx.fillStyle = "#ffd54f";
-      ctx.fillText(sub, 128, 100);
+      ctx.fillText(sub, 110, 168);
     }
     const texture = new THREE.CanvasTexture(canvas);
-    const mat = new THREE.SpriteMaterial({ map: texture, depthTest: false });
-    const sprite = new THREE.Sprite(mat);
-    sprite.scale.set(2.1, 1.05, 1);
-    sprite.renderOrder = 10;
-    return sprite;
+    const mat = new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false });
+    const geo = new THREE.PlaneGeometry(planeSize, planeSize);
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.renderOrder = 3;
+    return mesh;
+  }
+
+  // Tüm etiketler için TEK bir sabit yön: gerçek bir masa oyununda her
+  // kenar ortaya dönük yazılır ama bu, sabit izometrik kameramızda uzak
+  // kenarların baş aşağı görünmesine yol açıyordu. Onun yerine her etiket
+  // aynı yöne bakar — tahtanın hiçbir yerinde ters/baş aşağı yazı olmaz,
+  // varsayılan kamera açısından her zaman okunaklıdır.
+  const LABEL_UP = new THREE.Vector3(0, 0, -1);
+  const LABEL_RIGHT = new THREE.Vector3().crossVectors(LABEL_UP, new THREE.Vector3(0, 1, 0)).normalize();
+  const LABEL_BASIS = new THREE.Matrix4().makeBasis(LABEL_RIGHT, LABEL_UP, new THREE.Vector3(0, 1, 0));
+
+  /** Etiketi karonun yüzeyine, sabit/tutarlı bir yönde yatık yerleştirir. */
+  function orientLabelOnTile(mesh, x, z, y) {
+    mesh.position.set(x, y, z);
+    mesh.quaternion.setFromRotationMatrix(LABEL_BASIS);
   }
 
   function roundRect(ctx, x, y, w, h, r) {
@@ -168,8 +189,8 @@ const RenderModule = (() => {
       const sub = tile.type === "property" ? `${tile.price}₺`
         : tile.type === "tax" ? `-${tile.amount}₺`
         : tile.type === "rest" && tile.bonus ? `+${tile.bonus}₺` : "";
-      const label = makeLabelSprite(tile.name, sub);
-      label.position.set(pos.x, height + 0.75, pos.z);
+      const label = makeTileLabelMesh(tile.name, sub, size * 0.92);
+      orientLabelOnTile(label, pos.x, pos.z, height + 0.008);
       scene.add(label);
       tileMeshes.push(label);
     });
