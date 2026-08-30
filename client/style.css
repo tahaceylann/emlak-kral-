@@ -13,19 +13,29 @@ html, body {
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
-#topbar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 14px;
-  background: linear-gradient(135deg, #16324f, #0d1b2a);
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+/* Butonlar (oda/harita/özelleştir/yeniden başlat) + tur bilgisi: sağ
+   kenarda, Bot 3'ün (sağ-alt köşe) kutusunun hemen üstünde, aşağıdan
+   yukarıya dikilen bir sütun. */
+#sideControls {
+  position: absolute;
+  right: 10px;
+  bottom: 78px; /* corner-br oyuncu kutusunun (bkz. .player-box.corner-br) üstü */
+  z-index: 7;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
 }
-#topbarLeft { display: flex; align-items: center; gap: 10px; }
-#turnInfo { font-size: 13px; opacity: 0.8; }
-#customizeBtn {
+#sideControls #turnInfo {
+  font-size: 11px; opacity: 0.85; white-space: nowrap;
+  background: rgba(10,16,24,0.6);
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+#sideControls button {
+  width: 38px; height: 38px;
+  padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  border-radius: 9px;
   background: rgba(255,255,255,0.08);
-  padding: 6px 9px;
-  font-size: 15px;
-  border-radius: 8px;
 }
 
 #boardWrap {
@@ -284,13 +294,15 @@ input[type="text"]::placeholder { color: rgba(242,244,248,0.4); }
     margin: 0 auto;
     box-shadow: 0 0 60px rgba(0,0,0,0.5);
   }
-  #topbar { padding: 14px 24px; }
   #logPanel { max-height: 120px; padding: 8px 24px; }
   .player-box { font-size: 14px; padding: 10px 14px; min-width: 130px; max-width: 22vw; }
   .player-box .pprops { font-size: 11px; }
   .swatch { width: 12px; height: 12px; }
   #rollBtn { width: 128px; height: 128px; font-size: 34px; }
   #rollBtn span { font-size: 14px; }
+  #sideControls { right: 14px; bottom: 100px; gap: 8px; }
+  #sideControls button { width: 46px; height: 46px; font-size: 19px; }
+  #sideControls #turnInfo { font-size: 13px; padding: 5px 10px; }
   #rollBtn:not(:disabled):hover { filter: brightness(1.08); }
   button:not(:disabled) { cursor: pointer; }
   button:not(:disabled):hover { filter: brightness(1.1); }
@@ -333,10 +345,6 @@ input[type="text"]::placeholder { color: rgba(242,244,248,0.4); }
 /* Yatay telefon: dar yükseklikte her şeyi sıkıştır (bazı telefonlarda
    yatay yükseklik 350-400px kadar düşük olabiliyor). */
 @media (orientation: landscape) and (max-height: 500px) {
-  #topbar { padding: 6px 12px; }
-  #turnInfo { font-size: 11px; }
-  #topbarLeft { gap: 6px; }
-  #topbarLeft button { padding: 6px 8px; font-size: 13px; }
   #logPanel { max-height: 46px; padding: 4px 12px; font-size: 10.5px; line-height: 1.3; }
   #diceDisplay { font-size: 22px; padding: 4px 8px; top: 6px; }
   #chanceToast { top: 6px; padding: 5px 10px; }
@@ -349,4 +357,7 @@ input[type="text"]::placeholder { color: rgba(242,244,248,0.4); }
   .player-box.corner-tr, .player-box.corner-br { right: 6px; }
   .player-box .pprops { font-size: 9px; }
   .swatch { width: 8px; height: 8px; }
+  #sideControls { right: 6px; bottom: 54px; gap: 4px; }
+  #sideControls button { width: 30px; height: 30px; font-size: 13px; border-radius: 7px; }
+  #sideControls #turnInfo { font-size: 9px; padding: 2px 6px; }
 }
