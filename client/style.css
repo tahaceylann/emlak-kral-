@@ -1,13 +1,20 @@
 * { box-sizing: border-box; }
 html, body {
-  margin: 0; padding: 0; height: 100%;
+  margin: 0; padding: 0;
+  height: 100%;
+  overflow: hidden; /* hiçbir zaman kaydırma olmasın — oyun her zaman ekrana tam sığsın */
+  overscroll-behavior: none;
   background: #0d1b2a; color: #f2f4f8;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  overscroll-behavior: none;
 }
 
 #app {
-  height: 100%;
+  height: 100vh;
+  height: 100dvh; /* dinamik viewport yüksekliği — mobil tarayıcıda adres
+                     çubuğu açılıp kapanınca da oyun tam ekrana sığar,
+                     100vh gibi taşıp kaydırma gerektirmez */
+  width: 100vw;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
@@ -287,9 +294,7 @@ input[type="text"]::placeholder { color: rgba(242,244,248,0.4); }
    butonu tahtanın üstünde büyür — artık ayrı bir yan panele gerek yok,
    oyuncu/kontrol bilgisi zaten tahtanın üstünde köşelerde/ortada duruyor. */
 @media (min-width: 900px) {
-  html, body { overflow: hidden; }
   #app {
-    height: 100vh;
     max-width: 1600px;
     margin: 0 auto;
     box-shadow: 0 0 60px rgba(0,0,0,0.5);
