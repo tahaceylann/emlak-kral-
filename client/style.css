@@ -19,8 +19,7 @@ html, body {
   background: linear-gradient(135deg, #16324f, #0d1b2a);
   border-bottom: 1px solid rgba(255,255,255,0.08);
 }
-#topbar h1 { font-size: 18px; margin: 0; }
-#topbarRight { display: flex; align-items: center; gap: 10px; }
+#topbarLeft { display: flex; align-items: center; gap: 10px; }
 #turnInfo { font-size: 13px; opacity: 0.8; }
 #customizeBtn {
   background: rgba(255,255,255,0.08);
@@ -286,7 +285,6 @@ input[type="text"]::placeholder { color: rgba(242,244,248,0.4); }
     box-shadow: 0 0 60px rgba(0,0,0,0.5);
   }
   #topbar { padding: 14px 24px; }
-  #topbar h1 { font-size: 21px; }
   #logPanel { max-height: 120px; padding: 8px 24px; }
   .player-box { font-size: 14px; padding: 10px 14px; min-width: 130px; max-width: 22vw; }
   .player-box .pprops { font-size: 11px; }
@@ -336,10 +334,9 @@ input[type="text"]::placeholder { color: rgba(242,244,248,0.4); }
    yatay yükseklik 350-400px kadar düşük olabiliyor). */
 @media (orientation: landscape) and (max-height: 500px) {
   #topbar { padding: 6px 12px; }
-  #topbar h1 { font-size: 15px; }
   #turnInfo { font-size: 11px; }
-  #topbarRight { gap: 6px; }
-  #topbarRight button { padding: 6px 8px; font-size: 13px; }
+  #topbarLeft { gap: 6px; }
+  #topbarLeft button { padding: 6px 8px; font-size: 13px; }
   #logPanel { max-height: 46px; padding: 4px 12px; font-size: 10.5px; line-height: 1.3; }
   #diceDisplay { font-size: 22px; padding: 4px 8px; top: 6px; }
   #chanceToast { top: 6px; padding: 5px 10px; }
