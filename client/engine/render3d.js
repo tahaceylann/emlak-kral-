@@ -34,48 +34,54 @@ const RenderModule = (() => {
   }
 
   /**
-   * Kare ismini/değerini, gerçek bir tahta oyunundaki gibi karonun
-   * YÜZEYİNE düz basılı bir etiket olarak üretir (tahtanın üstünde uçuşan
-   * bir kart yerine) — Business Tour'daki gibi. Sprite değil düz bir
-   * THREE.Mesh (PlaneGeometry): kameraya dönmez, tahtayla birlikte durur.
+   * Kare ismini/değerini, gerçek bir tahta oyunundaki (Business Tour/
+   * Monopoly) gibi karonun DIŞ kenarına yakın, dar bir "başlık şeridi"
+   * olarak üretir — karonun tam ortasını kaplayan bir kart değil. Sprite
+   * değil düz bir THREE.Mesh (PlaneGeometry): kameraya dönmez, tahtayla
+   * birlikte durur.
    */
-  function makeTileLabelMesh(text, sub, planeSize) {
+  function makeTileLabelMesh(text, sub, planeWidth, planeHeight) {
     const canvas = document.createElement("canvas");
-    canvas.width = 220; canvas.height = 220;
+    canvas.width = 240; canvas.height = 150;
     const ctx = canvas.getContext("2d");
-    ctx.fillStyle = "rgba(12,12,18,0.6)";
-    roundRect(ctx, 8, 8, 204, 204, 20);
+    ctx.fillStyle = "rgba(10,10,16,0.72)";
+    roundRect(ctx, 5, 5, 230, 140, 16);
     ctx.fill();
     ctx.fillStyle = "#fff";
-    ctx.font = "bold 24px system-ui, sans-serif";
+    ctx.font = "bold 26px system-ui, sans-serif";
     ctx.textAlign = "center";
-    wrapText(ctx, text, 110, 92, 180, 27);
+    wrapText(ctx, text, 120, 52, 210, 28);
     if (sub) {
-      ctx.font = "bold 22px system-ui, sans-serif";
+      ctx.font = "bold 24px system-ui, sans-serif";
       ctx.fillStyle = "#ffd54f";
-      ctx.fillText(sub, 110, 168);
+      ctx.fillText(sub, 120, 115);
     }
     const texture = new THREE.CanvasTexture(canvas);
     const mat = new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false });
-    const geo = new THREE.PlaneGeometry(planeSize, planeSize);
+    const geo = new THREE.PlaneGeometry(planeWidth, planeHeight);
     const mesh = new THREE.Mesh(geo, mat);
     mesh.renderOrder = 3;
     return mesh;
   }
 
-  // Tüm etiketler için TEK bir sabit yön: gerçek bir masa oyununda her
-  // kenar ortaya dönük yazılır ama bu, sabit izometrik kameramızda uzak
-  // kenarların baş aşağı görünmesine yol açıyordu. Onun yerine her etiket
-  // aynı yöne bakar — tahtanın hiçbir yerinde ters/baş aşağı yazı olmaz,
-  // varsayılan kamera açısından her zaman okunaklıdır.
-  const LABEL_UP = new THREE.Vector3(0, 0, -1);
-  const LABEL_RIGHT = new THREE.Vector3().crossVectors(LABEL_UP, new THREE.Vector3(0, 1, 0)).normalize();
-  const LABEL_BASIS = new THREE.Matrix4().makeBasis(LABEL_RIGHT, LABEL_UP, new THREE.Vector3(0, 1, 0));
-
-  /** Etiketi karonun yüzeyine, sabit/tutarlı bir yönde yatık yerleştirir. */
-  function orientLabelOnTile(mesh, x, z, y) {
-    mesh.position.set(x, y, z);
-    mesh.quaternion.setFromRotationMatrix(LABEL_BASIS);
+  /**
+   * Etiketi, kendi kenarına özgü yönde (tahtanın merkezine dönük "yukarı")
+   * yatık şekilde karonun DIŞ kenarına yakın bir yere yerleştirir — gerçek
+   * masa oyunlarında/Business Tour'da her kenarın kendi tarafına dönük
+   * yazılması geleneğiyle aynı. Kamerayı sürükleyip döndürdükçe farklı
+   * kenarlar sırayla okunaklı hale gelir (fiziksel bir tahtayı çevirmek
+   * gibi) — sabit tek yönlü bir metne göre çok daha "gerçek tahta" hissi
+   * verir.
+   */
+  function orientLabelOnTile(mesh, x, z, y, outwardOffset) {
+    const inward = new THREE.Vector3(-x, 0, -z);
+    if (inward.lengthSq() < 1e-6) inward.set(0, 0, -1);
+    inward.normalize();
+    const up = new THREE.Vector3(0, 1, 0);
+    const right = new THREE.Vector3().crossVectors(inward, up).normalize();
+    const basis = new THREE.Matrix4().makeBasis(right, inward, up);
+    mesh.quaternion.setFromRotationMatrix(basis);
+    mesh.position.set(x - inward.x * outwardOffset, y, z - inward.z * outwardOffset);
   }
 
   function roundRect(ctx, x, y, w, h, r) {
@@ -189,8 +195,8 @@ const RenderModule = (() => {
       const sub = tile.type === "property" ? `${tile.price}₺`
         : tile.type === "tax" ? `-${tile.amount}₺`
         : tile.type === "rest" && tile.bonus ? `+${tile.bonus}₺` : "";
-      const label = makeTileLabelMesh(tile.name, sub, size * 0.92);
-      orientLabelOnTile(label, pos.x, pos.z, height + 0.008);
+      const label = makeTileLabelMesh(tile.name, sub, size * 0.86, size * 0.54);
+      orientLabelOnTile(label, pos.x, pos.z, height + 0.008, size * 0.24);
       scene.add(label);
       tileMeshes.push(label);
     });
