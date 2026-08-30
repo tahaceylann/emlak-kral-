@@ -332,7 +332,7 @@ const RenderModule = (() => {
       maxRight = Math.max(maxRight, Math.abs(local.x));
       maxUp = Math.max(maxUp, Math.abs(local.y));
     });
-    const marginRight = maxRight * 1.1, marginUp = maxUp * 1.15;
+    const marginRight = maxRight * 1.32, marginUp = maxUp * 1.38;
     const halfHeight = Math.max(marginUp, marginRight / aspect) * zoomFactor;
     camera.top = halfHeight;
     camera.bottom = -halfHeight;
