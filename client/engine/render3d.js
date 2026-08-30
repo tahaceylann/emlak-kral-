@@ -12,6 +12,7 @@ const RenderModule = (() => {
   let renderer, scene, camera, container;
   let cameraTarget = new THREE.Vector3(0, 0, 0);
   let cameraRadius = 22, cameraTheta = Math.PI / 4, cameraPhi = 0.9; // küresel koordinatlar
+  let zoomFactor = 1; // fare tekerleği/pinch ile ayarlanır — 1 = tahtayı tam sığdır
   const pawns = {}; // playerId -> THREE.Group
   const tileMeshes = [];
   let running = false;
@@ -311,7 +312,7 @@ const RenderModule = (() => {
       maxUp = Math.max(maxUp, Math.abs(local.y));
     });
     const marginRight = maxRight * 1.1, marginUp = maxUp * 1.15;
-    const halfHeight = Math.max(marginUp, marginRight / aspect);
+    const halfHeight = Math.max(marginUp, marginRight / aspect) * zoomFactor;
     camera.top = halfHeight;
     camera.bottom = -halfHeight;
     camera.left = -halfHeight * aspect;
@@ -342,6 +343,15 @@ const RenderModule = (() => {
     canvas.addEventListener("pointerdown", (e) => start(e.clientX, e.clientY));
     window.addEventListener("pointermove", (e) => move(e.clientX, e.clientY));
     window.addEventListener("pointerup", end);
+
+    // Fare tekerleği ile yakınlaştır (PC) — ortografik kamerada radius'un
+    // kendisi görünen alanı değiştirmez (fitOrthoFrustum otomatik sığdırır),
+    // o yüzden gerçek zum için ayrı bir çarpan kullanıyoruz.
+    canvas.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      zoomFactor = Math.min(1.6, Math.max(0.5, zoomFactor + e.deltaY * 0.001));
+      fitOrthoFrustum();
+    }, { passive: false });
   }
 
   function handleResize() {

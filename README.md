@@ -12,7 +12,28 @@ tasarlayabildiğin bir prototip. İstemci build aracı/framework gerektirmeyen
 vanilla HTML/CSS/JS + Three.js; çok oyunculu için hafif bir Node.js
 WebSocket sunucusu var.
 
+## PC'de oynamak (tek tıkla başlat)
+
+Oyun PC (Windows/Mac/Linux) için de ayarlı: geniş ekranda tahta solda büyük,
+kontroller sağda sabit bir panelde açılır; fare tekerleğiyle yakınlaştır/
+uzaklaş, sürükleyerek kamerayı döndür, **Boşluk** ya da **Enter** ile zar at.
+
+- **Windows**: `start.bat` dosyasına çift tıkla.
+- **macOS/Linux**: terminalde `./start.sh` çalıştır (ya da dosyaya çift
+  tıkla, bazı sistemlerde terminali otomatik açar).
+
+İkisi de gerekliyse sunucu bağımlılıklarını kurar (`server/npm install`,
+sadece ilk çalıştırmada), hem WebSocket sunucusunu hem istemciyi başlatıp
+tarayıcını `http://localhost:8080` adresinde otomatik açar. Önkoşul:
+[Node.js](https://nodejs.org) ve Python 3 kurulu olmalı (çoğu Mac/Linux'ta
+zaten kurulu gelir; Windows'ta [python.org](https://python.org)'dan kurup
+kurulumda **"Add python.exe to PATH"** kutusunu işaretlemen yeterli).
+Kapatmak için `start.sh`'ın çalıştığı terminalde Ctrl+C, ya da `start.bat`'ın
+açtığı iki pencereyi kapat.
+
 ## Nasıl oynanır — tek cihaz (bot'lara karşı)
+
+Script'i kullanmak istemiyorsan elle de başlatabilirsin:
 
 ```bash
 cd client
@@ -26,7 +47,8 @@ python3 -m http.server 8080
   çıkar.
 - Şans karesi rastgele bir olay kartı çeker, vergi karesi sabit bir miktar
   keser.
-- Tahtayı parmağınla/fareyle sürükleyerek 3D kamerayı döndürebilirsin.
+- Tahtayı parmağınla/fareyle sürükleyerek 3D kamerayı döndürebilirsin;
+  PC'de fare tekerleğiyle yakınlaştır/uzaklaş, Boşluk/Enter ile zar at.
 - Bir oyuncu dışında herkes iflas edince oyun biter.
 - Üst çubuktaki 🎨 **Özelleştir**'e basarak piyon formunu (Klasik Piyon / Küp
   Kule / Elmas) ve zar teması rengini seçebilirsin; seçim `localStorage`'a
@@ -75,6 +97,8 @@ Tarayıcıda `http://localhost:8080` aç, üst çubuktaki 🌐'ye bas:
 ## Dosya yapısı
 
 ```
+start.sh, start.bat  Tek tıkla/komutla sunucu+istemciyi başlatıp tarayıcıyı
+                     açan PC script'leri (macOS/Linux, Windows)
 client/
   index.html, style.css, app.js   Uygulama kabuğu ve oyun döngüsü orkestrasyonu
   engine/

@@ -611,6 +611,16 @@
     });
 
     window.addEventListener("resize", Render.handleResize);
+
+    // PC kısayolu: Boşluk/Enter ile zar at (bir input/select'e yazarken değil).
+    window.addEventListener("keydown", (e) => {
+      if (e.code !== "Space" && e.code !== "Enter") return;
+      const tag = (document.activeElement && document.activeElement.tagName) || "";
+      if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA" || tag === "BUTTON") return;
+      if (el("rollBtn").disabled) return;
+      e.preventDefault();
+      el("rollBtn").click();
+    });
   }
 
   function init() {
