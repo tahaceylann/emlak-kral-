@@ -64,7 +64,7 @@ const RenderModule = (() => {
     }
     const texture = new THREE.CanvasTexture(canvas);
     const mat = new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false });
-    const geo = new THREE.PlaneGeometry(1.7, 1.47);
+    const geo = new THREE.PlaneGeometry(1.5, 1.3);
     const mesh = new THREE.Mesh(geo, mat);
     mesh.renderOrder = 3;
     return mesh;
@@ -76,8 +76,16 @@ const RenderModule = (() => {
   const LABEL_RIGHT = new THREE.Vector3().crossVectors(LABEL_UP, new THREE.Vector3(0, 1, 0)).normalize();
   const LABEL_BASIS = new THREE.Matrix4().makeBasis(LABEL_RIGHT, LABEL_UP, new THREE.Vector3(0, 1, 0));
 
-  function orientLabelOnTile(mesh, x, z, y) {
-    mesh.position.set(x, y, z);
+  /**
+   * Yön her karoda SABİT (LABEL_BASIS) kalır — hiçbiri ters durmaz.
+   * Ama konum, referans görseldeki gibi tahtanın MERKEZİNDEN değil,
+   * karonun DIŞ kenarına yakın bir yerden — her kare kendi dış yönünde
+   * (outwardOffset kadar) kaydırılır.
+   */
+  function orientLabelOnTile(mesh, x, z, y, outwardOffset) {
+    const outward = new THREE.Vector3(x, 0, z);
+    if (outward.lengthSq() < 1e-6) outward.set(0, 0, 1); else outward.normalize();
+    mesh.position.set(x + outward.x * outwardOffset, y, z + outward.z * outwardOffset);
     mesh.quaternion.setFromRotationMatrix(LABEL_BASIS);
   }
 
@@ -196,7 +204,7 @@ const RenderModule = (() => {
         : tile.type === "tax" ? `-${tile.amount}₺`
         : tile.type === "rest" && tile.bonus ? `+${tile.bonus}₺` : "";
       const label = makeTileLabelMesh(tile.name, sub);
-      orientLabelOnTile(label, pos.x, pos.z, height + 0.008);
+      orientLabelOnTile(label, pos.x, pos.z, height + 0.008, size * 0.19);
       scene.add(label);
       tileMeshes.push(label);
     });
