@@ -34,54 +34,51 @@ const RenderModule = (() => {
   }
 
   /**
-   * Kare ismini/değerini, gerçek bir tahta oyunundaki (Business Tour/
-   * Monopoly) gibi karonun DIŞ kenarına yakın, dar bir "başlık şeridi"
-   * olarak üretir — karonun tam ortasını kaplayan bir kart değil. Sprite
-   * değil düz bir THREE.Mesh (PlaneGeometry): kameraya dönmez, tahtayla
-   * birlikte durur.
+   * Kare ismini/değerini, referans alınan görseldeki gibi (Business Tour'a
+   * benzer bir tahta oyunu) karonun renkli yüzeyine doğrudan basılmış gibi
+   * üretir: arkasında koyu bir kutu YOK, sadece siyah kontur/gölgeli beyaz
+   * metin — karonun kendi rengi arkadan görünür. Düz bir THREE.Mesh
+   * (PlaneGeometry, sprite değil) ve TÜM karolar için AYNI sabit yönde
+   * (LABEL_BASIS) yerleştirilir; bu yüzden hiçbir kare ters/baş aşağı
+   * durmaz — referans görseldeki gibi tahtanın her kenarı aynı anda,
+   * tutarlı biçimde okunaklıdır.
    */
-  function makeTileLabelMesh(text, sub, planeWidth, planeHeight) {
+  function makeTileLabelMesh(text, sub) {
     const canvas = document.createElement("canvas");
-    canvas.width = 240; canvas.height = 150;
+    canvas.width = 220; canvas.height = 190;
     const ctx = canvas.getContext("2d");
-    ctx.fillStyle = "rgba(10,10,16,0.72)";
-    roundRect(ctx, 5, 5, 230, 140, 16);
-    ctx.fill();
-    ctx.fillStyle = "#fff";
-    ctx.font = "bold 26px system-ui, sans-serif";
     ctx.textAlign = "center";
-    wrapText(ctx, text, 120, 52, 210, 28);
+    ctx.lineJoin = "round";
+    ctx.font = "800 26px system-ui, sans-serif";
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = "rgba(0,0,0,0.55)";
+    ctx.fillStyle = "#fff";
+    wrapText(ctx, text.toUpperCase(), 110, 78, 200, 30, true);
     if (sub) {
-      ctx.font = "bold 24px system-ui, sans-serif";
+      ctx.font = "800 24px system-ui, sans-serif";
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = "rgba(0,0,0,0.55)";
+      ctx.strokeText(sub, 110, 148);
       ctx.fillStyle = "#ffd54f";
-      ctx.fillText(sub, 120, 115);
+      ctx.fillText(sub, 110, 148);
     }
     const texture = new THREE.CanvasTexture(canvas);
     const mat = new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false });
-    const geo = new THREE.PlaneGeometry(planeWidth, planeHeight);
+    const geo = new THREE.PlaneGeometry(1.7, 1.47);
     const mesh = new THREE.Mesh(geo, mat);
     mesh.renderOrder = 3;
     return mesh;
   }
 
-  /**
-   * Etiketi, kendi kenarına özgü yönde (tahtanın merkezine dönük "yukarı")
-   * yatık şekilde karonun DIŞ kenarına yakın bir yere yerleştirir — gerçek
-   * masa oyunlarında/Business Tour'da her kenarın kendi tarafına dönük
-   * yazılması geleneğiyle aynı. Kamerayı sürükleyip döndürdükçe farklı
-   * kenarlar sırayla okunaklı hale gelir (fiziksel bir tahtayı çevirmek
-   * gibi) — sabit tek yönlü bir metne göre çok daha "gerçek tahta" hissi
-   * verir.
-   */
-  function orientLabelOnTile(mesh, x, z, y, outwardOffset) {
-    const inward = new THREE.Vector3(-x, 0, -z);
-    if (inward.lengthSq() < 1e-6) inward.set(0, 0, -1);
-    inward.normalize();
-    const up = new THREE.Vector3(0, 1, 0);
-    const right = new THREE.Vector3().crossVectors(inward, up).normalize();
-    const basis = new THREE.Matrix4().makeBasis(right, inward, up);
-    mesh.quaternion.setFromRotationMatrix(basis);
-    mesh.position.set(x - inward.x * outwardOffset, y, z - inward.z * outwardOffset);
+  // Tüm etiketler için TEK ve sabit bir yön — hiçbir kare, hangi kenarda
+  // olursa olsun, ters/baş aşağı durmaz.
+  const LABEL_UP = new THREE.Vector3(0, 0, -1);
+  const LABEL_RIGHT = new THREE.Vector3().crossVectors(LABEL_UP, new THREE.Vector3(0, 1, 0)).normalize();
+  const LABEL_BASIS = new THREE.Matrix4().makeBasis(LABEL_RIGHT, LABEL_UP, new THREE.Vector3(0, 1, 0));
+
+  function orientLabelOnTile(mesh, x, z, y) {
+    mesh.position.set(x, y, z);
+    mesh.quaternion.setFromRotationMatrix(LABEL_BASIS);
   }
 
   function roundRect(ctx, x, y, w, h, r) {
@@ -94,7 +91,7 @@ const RenderModule = (() => {
     ctx.closePath();
   }
 
-  function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+  function wrapText(ctx, text, x, y, maxWidth, lineHeight, withStroke) {
     const words = text.split(" ");
     let line = "", lines = [];
     for (const w of words) {
@@ -104,7 +101,10 @@ const RenderModule = (() => {
     }
     lines.push(line);
     const startY = y - ((lines.length - 1) * lineHeight) / 2;
-    lines.forEach((l, i) => ctx.fillText(l, x, startY + i * lineHeight));
+    lines.forEach((l, i) => {
+      if (withStroke) ctx.strokeText(l, x, startY + i * lineHeight);
+      ctx.fillText(l, x, startY + i * lineHeight);
+    });
   }
 
   function tileColor(tile) {
@@ -195,8 +195,8 @@ const RenderModule = (() => {
       const sub = tile.type === "property" ? `${tile.price}₺`
         : tile.type === "tax" ? `-${tile.amount}₺`
         : tile.type === "rest" && tile.bonus ? `+${tile.bonus}₺` : "";
-      const label = makeTileLabelMesh(tile.name, sub, size * 0.86, size * 0.54);
-      orientLabelOnTile(label, pos.x, pos.z, height + 0.008, size * 0.24);
+      const label = makeTileLabelMesh(tile.name, sub);
+      orientLabelOnTile(label, pos.x, pos.z, height + 0.008);
       scene.add(label);
       tileMeshes.push(label);
     });
