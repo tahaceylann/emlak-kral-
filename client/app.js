@@ -616,6 +616,12 @@
     });
 
     window.addEventListener("resize", Render.handleResize);
+    // Bazı tarayıcılarda orientationchange sırasında clientWidth/Height bir
+    // an eski değeri taşıyor — kısa bir gecikmeyle tekrar dene.
+    window.addEventListener("orientationchange", () => {
+      Render.handleResize();
+      setTimeout(Render.handleResize, 300);
+    });
 
     // PC kısayolu: Boşluk/Enter ile zar at (bir input/select'e yazarken değil).
     window.addEventListener("keydown", (e) => {
@@ -628,9 +634,21 @@
     });
   }
 
+  /** Ana ekrana eklenmiş (standalone) PWA'da yatay kilit dener; sekmede
+   * çalışırken tarayıcılar genelde reddeder — bu durumda #rotateOverlay
+   * (CSS) devreye girer, burada sessizce yok sayılır. */
+  function tryLockLandscape() {
+    try {
+      if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock("landscape").catch(() => {});
+      }
+    } catch (e) { /* desteklenmiyor — sorun değil */ }
+  }
+
   function init() {
     const canvas = el("boardCanvas");
     applyDiceTheme();
+    tryLockLandscape();
     Render.init(canvas);
     Render.startLoop();
     wireNetHandlers();

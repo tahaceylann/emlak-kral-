@@ -6,6 +6,6 @@
   "display": "standalone",
   "background_color": "#0d1b2a",
   "theme_color": "#0d1b2a",
-  "orientation": "portrait",
+  "orientation": "landscape",
   "icons": []
 }

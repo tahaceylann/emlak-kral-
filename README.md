@@ -53,6 +53,8 @@ python3 -m http.server 8080
 - Tahtayı parmağınla/fareyle sürükleyerek 3D kamerayı döndürebilirsin;
   PC'de fare tekerleğiyle yakınlaştır/uzaklaş, Boşluk/Enter ile zar at.
 - Bir oyuncu dışında herkes iflas edince oyun biter.
+- **Mobilde oyun yatay (landscape) modda tasarlandı** — telefon/tablet dik
+  tutulursa "cihazını çevir" ekranı gösterilir. PC'de bu kısıtlama yok.
 - Üst çubuktaki 🎨 **Özelleştir**'e basarak piyon formunu (Klasik Piyon / Küp
   Kule / Elmas) ve zar teması rengini seçebilirsin; seçim `localStorage`'a
   kaydedilir ve bir sonraki oyunda uygulanır.
